@@ -49,8 +49,12 @@ class UsersVK:
                   'fields': 'bdate'
                   }
         resp = requests.get(url_name, params={**self.params, **params}).json()
-        first_name = resp['response'][0]['first_name']
-        return first_name
+        try:
+            first_name = resp['response'][0]['first_name']
+            return first_name
+        except Exception:
+            return '''произошла ошибка, возможно не получится продолжить поиск, 
+                      мы работаем над этим, чуть позже все обязательно получится'''
 
     def get_sex(self, user_id):
         url_name = self.url + 'users.get'
@@ -58,19 +62,23 @@ class UsersVK:
                   'fields': 'sex'
                   }
         resp = requests.get(url_name, params={**self.params, **params}).json()
-        if resp['response'][0]['sex'] == 2:
-            search_sex = 1
-            return search_sex
-        elif resp['response'][0]['sex'] == 1:
-            search_sex = 2
-            return search_sex
-        elif resp['response'][0]['sex'] == 0:
-            bot.send_msg(user_id, 'Введите пол человека, которго ищете: 1 (если пол женский), 2 (если мужской)')
-            for event in bot.longpoll.listen():
-                if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                    if event.text == '1' or '2':
-                        search_sex = int(event.text)
-                        return search_sex
+        try:
+            if resp['response'][0]['sex'] == 2:
+                search_sex = 1
+                return search_sex
+            elif resp['response'][0]['sex'] == 1:
+                search_sex = 2
+                return search_sex
+            elif resp['response'][0]['sex'] == 0:
+                bot.send_msg(user_id, 'Введите пол человека, которго ищете: 1 (если пол женский), 2 (если мужской)')
+                for event in bot.longpoll.listen():
+                    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                        if event.text == '1' or '2':
+                            search_sex = int(event.text)
+                            return search_sex
+        except Exception:
+            bot.send_msg(user_id, '''произошла ошибка, возможно не получится продолжить поиск, 
+                                     мы работаем над этим, чуть позже все обязательно получится''')
 
     def get_age(self, user_id):
         url_name = self.url + 'users.get'
@@ -126,7 +134,7 @@ class UsersVK:
                                                  А пока поиск произведен по городу Москва''')
                         return 1
 
-    def get_photo(self, profile_id):
+    def get_photo(self, profile_id, user_id):
         url_name = self.url + 'photos.get'
         params = {'owner_id': profile_id,
                   'album_id': 'profile',
@@ -134,12 +142,16 @@ class UsersVK:
                   }
         resp = requests.get(url_name, params={**self.params, **params}).json()
         photos_list = []
-        for item_photo in resp['response']['items']:
-            photo_id = item_photo['id']
-            sum_likes_comments = item_photo['likes']['count'] + item_photo['comments']['count']
-            photos_list.append((photo_id, sum_likes_comments))
-        sorted_tuple = sorted(photos_list, key=lambda x: x[1], reverse=True)
-        return sorted_tuple[:3]
+        try:
+            for item_photo in resp['response']['items']:
+                photo_id = item_photo['id']
+                sum_likes_comments = item_photo['likes']['count'] + item_photo['comments']['count']
+                photos_list.append((photo_id, sum_likes_comments))
+            sorted_tuple = sorted(photos_list, key=lambda x: x[1], reverse=True)
+            return sorted_tuple[:3]
+        except Exception:
+            bot.send_msg(user_id, '''произошла ошибка, возможно не получится продолжить поиск, 
+                                     мы работаем над этим, чуть позже все обязательно получится''')
 
     def search_user(self, user_id):
         url_name = self.url + 'users.search'
@@ -150,12 +162,16 @@ class UsersVK:
                   'fields': 'relation',
                   'count': 1000}
         resp = requests.get(url_name, params={**self.params, **params}).json()
-        profiles = resp['response']['items']
-        users_vk_id = []
-        for profile in profiles:
-            if profile['is_closed'] == False:
-                users_vk_id.append(profile['id'])
-        return users_vk_id
+        try:
+            profiles = resp['response']['items']
+            users_vk_id = []
+            for profile in profiles:
+                if profile['is_closed'] == False:
+                    users_vk_id.append(profile['id'])
+            return users_vk_id
+        except Exception:
+            bot.send_msg(user_id, '''произошла ошибка, возможно не получится продолжить поиск, 
+                                     мы работаем над этим, чуть позже все обязательно получится''')
 
 bot = BotVK()
 user_vk = UsersVK()
